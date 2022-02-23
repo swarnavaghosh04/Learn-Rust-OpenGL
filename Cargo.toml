@@ -1,5 +1,5 @@
 [package]
-name = "Learn-Rust-Graphics"
+name = "learn_rust_graphics"
 version = "0.1.0"
 edition = "2021"
 
