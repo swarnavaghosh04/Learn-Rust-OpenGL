@@ -1,42 +1,28 @@
+
 #[macro_use]
 extern crate glium;
 
-const VERTEX_SHADER_SRC: &str = r#"
-    #version 140
+mod support;
 
-    in vec2 position;
+#[allow(unused_imports)]
+use glium::{
+    glutin::{
+        self,
+        event_loop::EventLoop
+    },
+    Surface
+};
 
-    void main() {
-        gl_Position = vec4(position, 0.0, 1.0);
-    }
-"#;
-
-const FRAGMENT_SHADER_SRC: &str = r#"
-#version 140
-
-out vec4 color;
-
-void main() {
-    color = vec4(1.0, 0.0, 0.0, 1.0);
+#[derive(Copy, Clone)]
+struct Vertex{
+    position: [f32; 2],
 }
-"#;
+
+implement_vertex!(Vertex, position);
 
 fn main(){
 
-    #[allow(unused_imports)]
-    use glium::{glutin, Surface};
-
-    let event_loop = glutin::event_loop::EventLoop::new();
-    let wb = glutin::window::WindowBuilder::new();
-    let cb = glutin::ContextBuilder::new();
-    let display = glium::Display::new(wb, cb, &event_loop).unwrap();
-
-    #[derive(Copy, Clone)]
-    struct Vertex{
-        position: [f32; 2],
-    }
-
-    implement_vertex!(Vertex, position);
+    let win = support::Window::create("Learn Rust Graphics");
 
     let data = [
         Vertex {position: [-0.75, -0.75]},
@@ -44,13 +30,19 @@ fn main(){
         Vertex {position: [0.75, -0.75]},
     ];
 
-    let vertex_buffer = glium::VertexBuffer::new(&display, &data).unwrap();
+    let vertex_buffer = glium::VertexBuffer::new(&win.display, &data).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-    let program = glium::Program::from_source(&display, VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC, None).unwrap();
 
-    event_loop.run(move |event, _, control_flow| {
+    let vs_src = std::fs::read_to_string("share/learn-rust-graphics/vs.glsl")
+        .expect("error occured while reading vertex shaer");
+    let fs_src = std::fs::read_to_string("share/learn-rust-graphics/fs.glsl")
+        .expect("error occured while reading fragment shaer");
 
-        let mut target = display.draw();
+    let program = glium::Program::from_source(&win.display, &vs_src, &fs_src, None).unwrap();
+
+    win.event_loop.run(move |event, _, control_flow| {
+
+        let mut target = win.display.draw();
         target.clear_color(0., 0., 0., 1.0);
         target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms,
             &Default::default()).unwrap();
